@@ -118,6 +118,18 @@
             font-size: 18px;
             /* Sesuaikan dengan ukuran yang Anda inginkan */
         }
+
+        .logout-button{
+            border-radius: 0;
+        }
+
+        .rounded{
+            border-radius: 0px;
+        }
+
+        #logout-button {
+            border-radius: 0px;
+        }
     </style>
 
 </head>
@@ -174,6 +186,7 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" href="/profil/{{ user_info.username }}">Pengaturan Profil</a></li>
+                        <li><a class="dropdown-item" href="/pembelianku">Pembelianku</a></li>
                         <li><a id="logout-button" class="dropdown-item" onclick="logout()" href="#">Logout</a></li>
                     </ul>
                     

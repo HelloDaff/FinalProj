@@ -9,63 +9,75 @@
 <body>
     <header>
         {% if user_info and user_info.role == 'admin' %}
-        <a href="#" class="logo">Logo</a>
+        <a href="/" class="logo">
+            <img src="../static/images/kk (1).png" alt="Logo">
+        </a>
         <div id="menu-bar" class="fas fa-bars"></div>
         <nav class="navbar">
-            <a href="/administrator/dashboard">Dashboard</a>
-            <a href="/">Home</a>
-            <a href="/about">About</a>
-            <a href="/mentor">Mentor</a>
-            <a href="/materi">Materi</a>
-            <a href="/forum">Forum</a>
-            <a href="/hubungi_kami">Kontak</a>
-            <a class="navbar-brand"> {{ user_info.username }} Admin</a>
-            <!-- <button id="logout-button" style="margin-right: 10px;" class="btn btn-danger">Logout</button> -->
-            <a id="logout-button" style="margin-right: 10px;" id="Login" href="#" class="btn">Logout</a>
-            <!-- ... (Tambahkan elemen-elemen lain sesuai kebutuhan) ... -->
+            <ul id="nav-links" class="nav-links">
+                <li><a href="/" class="fw-bolder">Home</a></li>
+                <li><a href="/about" class="fw-bolder">About</a></li>
+                <li><a href="/mentor" class="fw-bolder">Mentor</a></li>
+                <li><a href="/materi" class="fw-bolder">Matery</a></li>
+                <li><a href="/forum/{{ user_info.username }}" class="fw-bolder">Forum</a></li>
+                <li><a href="/hubungi_kami" class="fw-bolder">Contact</a></li>
+                <li><a href="/administrator/dashboard/{{ user_info.username }}" class="fw-bolder"> {{ user_info.username }} Admin </a></li>
+            </ul>
+
+            <button id="Logout" href="#" class="btn btn-primary-gradient py-sm-3 px-4 px-sm-5 rounded-pill fw-bolder"
+                onclick="logout()">Logout</button>
         </nav>
         {% endif %}
 
-        <!-- Navbar Member -->
         {% if user_info and user_info.role == 'member' %}
-        <a href="#" class="logo">Logo</a>
-
+        <a href="/" class="logo">
+            <img src="../static/images/kk (1).png" alt="Logo">
+        </a>
         <div id="menu-bar" class="fas fa-bars"></div>
-
         <nav class="navbar">
-            <a href="/">Home</a>
-            <a href="/about">About</a>
-            <a href="/mentor">Mentor</a>
-            <a href="/materi">Materi</a>
-            <a href="/forum">Forum</a>
-            <a href="/hubungi_kami">Kontak</a>
-            <a class="navbar-brand">{{ user_info.username }}</a>
-            <!-- <button id="logout-button" style="margin-right: 10px;" class="btn btn-danger">Logout</button>
-                 -->
-            <a id="logout-button" style="margin-right: 10px;" id="Login" href="#" class="btn">Logout</a>
-
-            <!-- ... (Tambahkan elemen-elemen lain sesuai kebutuhan) ... -->
+            <ul id="nav-links" class="nav-links">
+                <li><a href="/" class="fw-bolder">Home</a></li>
+                <li><a href="/about" class="fw-bolder">About</a></li>
+                <li><a href="/mentor" class="fw-bolder">Mentor</a></li>
+                <li><a href="/materi" class="fw-bolder">Matery</a></li>
+                <li><a href="/forum/{{ user_info.username }}" class="fw-bolder">Forum</a></li>
+                <li><a href="/hubungi_kami" class="fw-bolder">Contact</a></li>
+                <div class="dropdown">
+                    <a class="navbar-brand dropdown-toggle" href="#" role="button" id="userDropdown"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ user_info.username }}
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="/profil/{{ user_info.username }}">Pengaturan Profil</a></li>
+                        <li><a id="logout-button" class="dropdown-item" onclick="logout()" href="#">Logout</a></li>
+                    </ul>
+                    
+                </div>
+                <!-- <li><a href="#" class="fw-bolder"> {{ user_info.username }} </a></li> -->
+            </ul>
         </nav>
         {% endif %}
 
-        <!-- Navbar untuk Pengunjung atau yang belum login -->
         {% if not user_info %}
-        <a href="#" class="logo">Logo</a>
-
+        <a href="/home" class="logo">
+            <img src="../static/images/kk (1).png" alt="Logo">
+        </a>
         <div id="menu-bar" class="fas fa-bars"></div>
-
         <nav class="navbar">
-            <a href="/">Home</a>
-            <a href="/about">About</a>
-            <a href="/mentor">Mentor</a>
-            <a href="/login">Materi</a>
-            <a href="/login">Forum</a>
-            <a href="/login">Kontak</a>
+            <ul id="nav-links" class="nav-links">
+                <li><a href="/" class="fw-bolder">Home</a></li>
+                <li><a href="/about" class="fw-bolder">About</a></li>
+                <li><a href="/login" class="fw-bolder">Mentor</a></li>
+                <li><a href="/materi" class="fw-bolder">Matery</a></li>
+                <li><a href="/forum" class="fw-bolder">Forum</a></li>
+                <li><a href="/hubungi_kami" class="fw-bolder">Contact</a></li>
+            </ul>
 
-            <a style="margin-right: 10px;" id="Login" href="/login" class="btn">Login</a>
-        </nav>
+            <a id="Login" href="/login"
+                class="btn btn-primary-gradient py-sm-3 px-4 px-sm-5 rounded-pill fw-bolder">Login</a>
         </nav>
         {% endif %}
+
     </header>
     <section class="about" id="about">
         <h1 class="heading">Daftar Kelas</h1>

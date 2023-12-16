@@ -15,6 +15,7 @@ from os.path import join, dirname
 from dotenv import load_dotenv
 
 
+
 app = Flask(__name__)
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
@@ -82,12 +83,6 @@ def mentor():
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("login"))
 
-# @app.route("/materi")
-# def materi():
-#     return render_template("materi.html")
-# @app.route("/forum")
-# def forum():
-#     return render_template("forum.html")
 @app.route("/mentor_kami", methods=['GET', 'POST'])
 def mentor_kami():
     token_receive = request.cookies.get("mytoken")
@@ -298,38 +293,9 @@ def user_count():
 @app.route("/administrator/materi")
 def admin_kelas():
     classes = db.classes.find()
+    # for class in classes
+    # kelas = class['nama_kelas']
     return render_template("administrator/materi.html", classes=classes)
-
-@app.route("/materi")
-def materi():
-    return render_template("Myclass.html")
-
-@app.route('/tambah_kelas', methods=['POST'])
-@admin_required
-def tambah_kelas():
-    today = datetime.now()
-    mytime = today.strftime('%Y-%m-%d-%H-%M-%S')
-    nama_kelas = request.form['nama_kelas']
-    category = request.form['category']
-    file = request.files['gambar_kelas']
-    filename = secure_filename(file.filename)
-    extension = filename.split(".")[-1]
-    file_path = f"administrator/assets/image/class-{mytime}.{extension}"
-    file.save("./static/" + file_path)
-    deskripsi_kelas = request.form['deskripsi_kelas']
-    harga_kelas = int(request.form['harga_kelas'])
-
-    current_date = datetime.now().isoformat()
-    doc = {
-        "nama_kelas" : nama_kelas,
-        "gambar_kelas" : file_path,
-        "deskripsi_kelas" : deskripsi_kelas,
-        "harga_kelas" : harga_kelas,
-        "tanggal": current_date,
-        "category": category,
-    }
-    db.classes.insert_one(doc)
-    return redirect(url_for('admin_kelas'))
     
 @app.route("/hubungi_kami", methods=['GET', 'POST'])
 def hubungi():
@@ -388,6 +354,7 @@ def save_user():
         }
 
         if 'file_give' in request.files:
+            # nama_wisata = request.form['nama_wisata']
             file = request.files['file_give']
             filename = secure_filename(file.filename)
             extension = filename.split('.')[-1]
@@ -432,10 +399,10 @@ def forum(username):
                 "timestamp": timestamp,
             }
             db.forum.insert_one(doc)
-            return jsonify({"success": True, "msg": "Komentar berhasil ditambahkan"})
-
-        forums = list(db.forum.find().sort("timestamp", -1))
-        return render_template("forum.html", user_info=user_info, forums=forums)
+            return jsonify({ "msg": "Komentar berhasil ditambahkan"})
+        else:
+            forums = list(db.forum.find().sort("timestamp", -1))
+            return render_template("forum.html", user_info=user_info, forums=forums)
 
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("login"))
@@ -467,6 +434,8 @@ def forum_comment(username):
                             "foto_profil": user_info["profile_pic_real"],
                             "role": user_info["role"],
                             "post_data": post_date,
+                            # "status": "false", > "status":"True"
+                            # if "status" == "True" "redirect_url('front-end')
                         }
                     }
                 },
@@ -559,10 +528,217 @@ def get_notifications():
     except Exception as e:
         # Handle exceptions as needed
         return jsonify({'error': str(e)})
+    
 @app.route("/temp")
 def temp():
     return render_template("templateNavbar.html")
 
+@app.route("/materi")
+def materi():
+    token_receive = request.cookies.get("mytoken")
+    try:
+        if token_receive:
+            payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+            user_info = db.user.find_one({'username': payload['id']})
+            frontend_classes = list(db.materi.find({"category": "Front-end"}))
+            backend_classes = list(db.materi.find({"category": "Back-end"}))
+            fullstack_classes = list(db.materi.find({"category": "Fullstack"}))
+            return render_template("CLASSBARU.html", frontend_classes=frontend_classes, backend_classes=backend_classes, fullstack_classes=fullstack_classes, user_info=user_info)
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("login"))
+
+@app.route("/tambah_kelas", methods=["POST"])
+def tambah_kelas():
+    token_receive = request.cookies.get("mytoken")
+    try:
+        if token_receive:
+            payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+            user_info = db.materi.find_one({'username': payload['id']})
+        else:
+            user_info = None
+        if request.method == "POST":
+            nama_kelas = request.form.get("nama_kelas")
+            category = request.form.get("category")
+            gambar_kelas = request.files["gambar_kelas"]  # handle file upload appropriately
+            deskripsi_kelas = request.form.get("deskripsi_kelas")
+            harga_kelas = request.form.get("harga_kelas")
+
+            new_class = {
+                "nama_kelas": nama_kelas,
+                "category": category,
+                "gambar_kelas": gambar_kelas.filename,
+                "deskripsi_kelas": deskripsi_kelas,
+                "harga_kelas": harga_kelas
+            }
+
+            db.materi.insert_one(new_class)
+            gambar_kelas.save(os.path.join(app.config['UPLOAD_FOLDER'], gambar_kelas.filename))
+            return redirect(url_for("materi",user_info=user_info))
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+            return redirect(url_for("materi"))
+    
+@app.route("/transaksi/<materi_id>")
+def transaksi(materi_id):
+    token_receive = request.cookies.get("mytoken")
+    try:
+        if token_receive:
+            payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+            user_info = db.user.find_one({'username': payload['id']})
+            materi = db.materi.find_one({'_id': ObjectId(materi_id)})
+            user_data = db.user.find_one({"username": payload['id']}, {"_id": False})
+            return render_template("Transaction.html", user_info=user_info, materi=materi, user_data=user_data)
+        else:
+            return redirect(url_for("login"))
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("login"))
+
+@app.route("/create_transaction", methods=["POST"])
+def create_transaction():
+    token_receive = request.cookies.get("mytoken")
+    try:
+        if token_receive:
+            payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+            user_info = db.materi.find_one({'username': payload['id']})
+        else:
+            user_info = None
+        if request.method == "POST":
+            user_id = payload['id']
+            class_id = request.form.get("class_id")
+            email = request.form.get("email")
+            kartu_bank = request.form.get("card")
+            penerima = request.form.get("penerima")
+            profinsi = request.form.get("provinsi")
+            kota = request.form.get("kota")
+            kodepos = request.form.get("kodepos")
+            harga = (request.form.get("harga"))
+            kategori = request.form.get("category")
+            nama_kelas = request.form.get("nama_kelas")
+            username = request.form.get("username")
+
+            new_transaction = {
+                "user_id": user_id,
+                "class_id": class_id,
+                "transaction_date": datetime.now(),
+                "status": False,
+                "email": email,
+                "kartu_bank": kartu_bank,
+                "penerima": penerima,
+                "profinsi": profinsi,
+                "kota": kota,
+                "postal_code": kodepos,
+                "price": harga,
+                "category": kategori,
+                "class_name": nama_kelas,
+                "username": username
+            }
+
+            db.transactions.insert_one(new_transaction)
+            return redirect(url_for("materi"))
+        else:
+            return redirect(url_for("login"))
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("login"))
+    
+@app.route("/accept_transaction/<transaction_id>", methods=["POST"])
+@admin_required
+def accept_transaction(transaction_id):
+    token_receive = request.cookies.get("mytoken")
+    try:
+        if token_receive:
+            payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+            user_info = db.user.find_one({'username': payload['id']})
+            if user_info is None:
+                return redirect(url_for("login"))
+            username = user_info['username']
+            update = db.transactions.update_one({"_id": ObjectId(transaction_id)}, {"$set": {"status":"True"}})
+            return redirect(url_for("admin_transaksi", username=username))  
+        else:
+            return redirect(url_for("login"))
+            
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("login"))
+
+@app.route("/administrator/transaksi/<username>")
+@admin_required
+def admin_transaksi(username):
+    token_receive = request.cookies.get('mytoken')
+    try:
+        payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+        status = username == payload["id"] 
+        user_info = db.user.find_one({'username': payload['id']})
+        user_data = db.user.find_one({"username": username}, {"_id": False})
+        page = request.args.get('page', 1, type=int)
+        transaction_per_page = 10
+        transactions = db.transactions.find().skip((page - 1) * transaction_per_page).limit(transaction_per_page)
+        total_transaksi = db.transactions.count_documents({})
+        if user_info is not None:
+            return render_template("administrator/Admintransaction.html", status=status,user_data=user_data,user_info=user_info, 
+                                   is_admin=True, transaction_per_page=transaction_per_page, 
+                                   transactions=transactions, page=page, total_contacts=total_transaksi)
+        else:
+            return redirect(url_for('login', msg='User not found'))
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for('login', msg='Token is invalid'))
+    
+
+
+
+@app.route("/pembelianku")
+def pembelian():
+    token_receive = request.cookies.get("mytoken")
+    try:
+        if token_receive:
+            payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+            user_info = db.user.find_one({'username': payload['id']})
+            transactions = list(db.transactions.find({'user_id': payload['id']}))
+            materi = list(db.materi.find())
+            frontend_classes = list(db.materi.find({"category": "Front-end"}))
+            backend_classes = list(db.materi.find({"category": "Back-end"}))
+            fullstack_classes = list(db.materi.find({"category": "Fullstack"}))
+
+            for transaction in transactions:
+                transaction['class_id'] = str(transaction['class_id'])
+
+            for materi in frontend_classes:
+                materi['_id'] = str(materi['_id'])
+                # _id = ObjectId("dsakjhldshajkdhjskahdjksahdjksa")
+            for materi in backend_classes:
+                materi['_id'] = str(materi['_id'])
+            for materi in fullstack_classes:
+                materi['_id'] = str(materi['_id'])
+            return render_template("pembelianku.html", user_info=user_info, transactions=transactions, materi=materi,frontend_classes=frontend_classes, backend_classes=backend_classes, fullstack_classes=fullstack_classes)
+        else:
+            return redirect(url_for("login"))
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("login"))
+
+@app.route("/mykonten")
+def isikonten():
+    token_receive = request.cookies.get("mytoken")
+    try:
+        if token_receive:
+            payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
+            user_info = db.user.find_one({'username': payload['id']})
+            transactions = list(db.transactions.find({'user_id': payload['id']}))
+            materi = list(db.materi.find())
+            frontend_classes = list(db.materi.find({"category": "Front-end"}))
+            backend_classes = list(db.materi.find({"category": "Back-end"}))
+            fullstack_classes = list(db.materi.find({"category": "Fullstack"}))
+
+            for transaction in transactions:
+                transaction['class_id'] = str(transaction['class_id'])
+
+            for materi in frontend_classes:
+                materi['_id'] = str(materi['_id'])
+            for materi in backend_classes:
+                materi['_id'] = str(materi['_id'])
+            for materi in fullstack_classes:
+                materi['_id'] = str(materi['_id'])
+            return render_template("Mycontent.html", user_info=user_info, transactions=transactions, materi=materi,frontend_classes=frontend_classes, backend_classes=backend_classes, fullstack_classes=fullstack_classes)
+        else:
+            return redirect(url_for("login"))
+    except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
+        return redirect(url_for("login"))
     
 if __name__ == "__main__":
     app.run("0.0.0.0", port=5000, debug=True)

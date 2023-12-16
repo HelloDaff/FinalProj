@@ -1,0 +1,33 @@
+<body>
+    <section class="wrapper">
+        <div class="container">
+            <div class="row">
+                <div class="col text-center mb-5">
+                    <h1 class="display-4 font-weight-bolder judul">Our Class</h1>
+                    <p class="lead">Front End </p>
+                </div>
+            </div>
+
+            <div class="row">
+                {% for transaction in transactions %}
+                {% if transaction['status'] == "True" %}
+
+                <div class="col-md-4 mb-4">
+                    <div class="nft">
+                        <div class='main' id="class">
+                            <h2>{{ transaction['class_id'] }}</h2>
+                            <p class='description'>{{ transaction['category'] }}.</p>
+                            <!-- ... other content ... -->
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-md-4 mb-4">
+                    <p>Pending</p>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</body>

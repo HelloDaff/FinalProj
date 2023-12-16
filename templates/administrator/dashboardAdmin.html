@@ -42,27 +42,37 @@
     });
 
     function showNotificationPopover(notifications) {
-      if (notifications.length > 0) {
-        // Generate HTML for notifications
-        const notificationsHtml = notifications.map(notification => `<div>${notification}</div>`).join('');
+    if (notifications.length > 0) {
+        // Generate HTML for notifications with colored cards
+        const notificationsHtml = notifications.map((notification, index) => `
+            <div class="card bg-info text-white mb-2">
+                <div class="card-body">
+                    ${notification}
+                </div>
+            </div>
+        `).join('');
 
         // Attach a Bootstrap popover to the notification bell icon
         $("#notificationBell").popover({
-          title: 'New Notifications',
-          content: notificationsHtml,
-          html: true,
-          placement: 'bottom',
-          trigger: 'otomatis',
+            title: 'New Notifications',
+            content: notificationsHtml,
+            html: true,
+            placement: 'bottom',
+            trigger: 'manual', // Ganti 'otomatis' dengan 'manual' untuk memicu manual
         });
 
         // Show the popover
         $("#notificationBell").popover('show');
 
+        setTimeout(() => {
+            $("#notificationBell").popover('hide');
+        }, 10000);
+
         // Remove the "has-notifications" class after showing notifications
         $("#notificationBell").removeClass("has-notifications");
-      }
     }
-    
+}
+
 
     // Modify the existing fetchNotifications function to use the showNotificationPopover function
     function fetchNotifications() {
@@ -84,6 +94,12 @@
       });
     }
 
+    // category = $("#category").val();
+    // if (category) {
+    //   $.get("/get_notifications?category=" + category, function (notifications) {
+    //     showNotificationPopover(notifications);
+    //   });
+    // }
 
   </script>
   <style>
@@ -120,6 +136,7 @@
         {% if is_admin %}
         <a href="/administrator/profile/{{ user_info.username }}" class="active">Profile</a>
         <a href="/administrator/hubungi/{{ user_info.username }}" class="active">Hubungi</a>
+        <a href="/administrator/transaksi/{{ user_info.username }}" class="active">transaksi</a>
         <a href="#" data-bs-toggle="modal" data-bs-target="#addMentorModal">Tambah Mentor</a>
         <a href="#" data-bs-toggle="modal" data-bs-target="#addClassModal">Tambah Kelas</a>
         <div class="links">
@@ -280,14 +297,18 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form action="/tambah_kelas" method="post" enctype="multipart/form-data">
+          <form  action="/tambah_kelas" method="post" enctype="multipart/form-data">
             <div class="mb-3">
               <label for="className" class="form-label">Nama Kelas</label>
               <input type="text" class="form-control" id="className" name="nama_kelas">
             </div>
             <div class="mb-3">
-              <label for="className" class="form-label">Category Kelas</label>
-              <input type="text" class="form-control" id="className" name="nama_kelas">
+              <label for="category" class="form-label">Category Kelas</label>
+              <!-- <input type="text" class="form-control" id="className" name="nama_kelas"> -->
+              <select id="category" class="form-select" aria-label="Default select example" required name="category">
+                <option value="Front-end">Front-end</option>
+                <option value="Back-end">Back-end</option>
+                <option value="Fullstack">Fullstack</option>
             </div>
             <div class="mb-3">
               <label for="classFile" class="form-label">Gambar Kelas</label>
